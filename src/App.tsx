@@ -1,6 +1,7 @@
 
 import { useState } from 'react'
 import './App.css'
+import QuizBtn from './components/QuizBtn'
 
 function App() {
   
@@ -25,7 +26,10 @@ function App() {
   const [currentQuestionOptionCText, setCurrentQuestionOptionCText] = useState("");
   const [currentQuestionOptionDText, setCurrentQuestionOptionDText] = useState("");
   const [currentQuestionCorrectAnswer, setQuestionCorrectAnswer] = useState(0);
-  const [finalOutputString, setFinalOutputString] = useState(0); //not a fan of this but w.e
+  const [finalOutputString, setFinalOutputString] = useState(''); //not a fan of this but w.e
+
+  const [quizPhase, setQuizPhase] = useState(0)
+
 
   return (
 
@@ -34,7 +38,9 @@ function App() {
       <div className="">
         <h1>Security+ Quiz - Data</h1>
         <p>This quiz will present you 10 questions out of a pool of 25, by connecting through a mySQL databsee that is authenticated with Azure Key Vault.</p>
-        <button>Start Quiz</button>
+        <QuizBtn 
+        displayedString="Start Quiz"
+        btnPhase={quizPhase} />
       </div>
 
 
