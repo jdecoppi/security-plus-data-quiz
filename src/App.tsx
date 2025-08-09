@@ -3,8 +3,13 @@ import { useState } from 'react'
 import './App.css'
 import QuizBtn from './components/QuizBtn'
 
+function UpdatePhase(currentPhase: number) {
+  return currentPhase++;
+}
+
+
 function App() {
-  
+
   //scratch notes
   /* phases: before quiz has started, quiz ongoing, quiz finished */
   /* variables per phase:
@@ -30,22 +35,51 @@ function App() {
 
   const [quizPhase, setQuizPhase] = useState(0)
 
+  switch (quizPhase) {
 
-  return (
+    case 0:
+      return (
+        <>
+          <div className="">
+            <h1>Security+ Quiz - Data</h1>
+            <p>This quiz will present you 10 questions out of a pool of 25, by connecting through a mySQL databsee that is authenticated with Azure Key Vault.</p>
+            <QuizBtn
+              displayedString="Start Quiz"
+              onClick={() => setQuizPhase((quizPhase) => quizPhase + 1)}
+            />
+          </div>
+        </>
+      )
+
+    case 1:
+      return (
+        <>
+          <div className="">
+            <h2>Question {currentQuestionCount.toString()}: {currentQuestionText}</h2>
 
 
-    <>
-      <div className="">
-        <h1>Security+ Quiz - Data</h1>
-        <p>This quiz will present you 10 questions out of a pool of 25, by connecting through a mySQL databsee that is authenticated with Azure Key Vault.</p>
-        <QuizBtn 
-        displayedString="Start Quiz"
-        btnPhase={quizPhase} />
-      </div>
+            <ol style={{ listStyleType: 'upper-alpha' }}>
+              <li>{currentQuestionOptionAText}</li>
+              <li>{currentQuestionOptionBText}</li>
+              <li>{currentQuestionOptionCText}</li>
+              <li>{currentQuestionOptionDText}</li>
+            </ol>
+            
+            <QuizBtn
+              displayedString="Next Question" 
+              onClick={() => setQuizPhase((quizPhase) => quizPhase + 1)}/>
 
 
-    </>
-  )
+          </div>
+        </>
+      )
+
+    case 2:
+
+    default:
+
+
+  }
 }
 
 export default App
