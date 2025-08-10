@@ -5,7 +5,6 @@ interface Props {
     onClick: () => void; // allow onClick prop
 }
 
-const [selectedQuizNumbers, setSelectedQuizNumbers] = useState(0)
 
 // function CyclePhases(currentPhase: string) {
 //     //get rid of this switch statemetn and just have different displayed based on phase on App.tsx
