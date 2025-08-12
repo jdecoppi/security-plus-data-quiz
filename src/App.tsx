@@ -2,40 +2,23 @@
 import { useState } from 'react'
 import './App.css'
 import QuizBtn from './components/QuizBtn'
-import mysql from'mysql2/promise';
+import {CosmosClient} from '@azure/cosmos';
+import dotenv from 'dotenv';
 
-async function ConnectToDB() {
-  
+async function ConnectToCosmosDB() {
 
-const connection = await mysql.createConnection({
-  host: 'localhost',
-  user: 'secplususer',
-  database: 'security_plus_questions',
-});
+  const client = new CosmosClient(connectionString);
 
-// A simple SELECT query
-try {
-  const [results, fields] = await connection.query(
-    'SELECT * FROM `table` WHERE `name` = "Page" AND `age` > 45'
-  );
+  const database = client.database('security_plus_questions');
+  const conttainer = database.container('questions');
 
-  console.log(results); // results contains rows returned by server
-  console.log(fields); // fields contains extra meta data about results, if available
-} catch (err) {
-  console.log(err);
-}
+    try {
+    const { resources: results } = await conttainer.items.readAll().fetchAll();
 
-// Using placeholders
-try {
-  const [results] = await connection.query(
-    'SELECT * FROM `table` WHERE `name` = ? AND `age` > ?',
-    ['Page', 45]
-  );
-
-  console.log(results);
-} catch (err) {
-  console.log(err);
-}
+    console.log(results); // results contains items returned by the query
+  } catch (err) {
+    console.log(err);
+  }
 
 
 }
@@ -65,6 +48,7 @@ function App() {
   const [currentQuestionOptionDText, setCurrentQuestionOptionDText] = useState("d");
   const [currentQuestionCorrectAnswer, setQuestionCorrectAnswer] = useState(0);
   const [finalOutputString, setFinalOutputString] = useState(''); //not a fan of this but w.e
+  const [connectOnce, setConnectOnce] = useState(0)
 
   const [quizPhase, setQuizPhase] = useState(0)
 
@@ -87,7 +71,10 @@ function App() {
       )
 
     case 1:
-      ConnectToDB()
+      while (connectOnce === 0) {
+      ConnectToCosmosDB()
+      setConnectOnce((connectOnce) => connectOnce + 1)
+      }
       return (
         <>
           <div className="">
