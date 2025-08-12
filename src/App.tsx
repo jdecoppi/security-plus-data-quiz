@@ -1,53 +1,27 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import QuizBtn from './components/QuizBtn'
-import { CosmosClient } from '@azure/cosmos';
-
-async function ConnectToCosmosDB() {
-
-  // const connectionString = process.env.COSMOS_DB_CONNECTION_STRING;
-
-  if (!connectionString) {
-    console.error('Missing COSMOS_DB_CONNECTION_STRING in .env file');
-    return;
-  }
-
-  const client = new CosmosClient(connectionString);
-  const database = client.database('security_plus_questions');
-  const container = database.container('secplusqs');
 
 
+async function fetchQuestionsFromAPI() {
+
+  const apiUrl = 'https://security-plus-quiz-api.azurewebsites.net/api/getQuestions';
+  
   try {
-    //SELECT * from container limit 10 sort by rand
-    //select 10 by random
-
-
-
-    //i dont think nodwl
-
-    const uniqueNumbers = generateUniqueRandomNumbers(10, 1, 25);
-    console.log(uniqueNumbers);
-
-    const placeholders = uniqueNumbers.map((_, i) => `@id${i}`).join(", "); //the slots
-    const parameters = uniqueNumbers.map((value, i) => ({ name: `@id${i}`, value })); //values tio put in the slots
-
-
-    const querySpec = {
-      query: `SELECT * FROM c WHERE c.QuestionID IN (${placeholders})`,
-      parameters
-    };
-
-    const { resources: results } = await container.items
-      .query(querySpec)
-      .fetchAll();
-    console.log(results);
-    return results;
-  } catch (err) {
-    console.log(err);
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching questions from API:', error);
+    throw error;
   }
 }
 
 function generateUniqueRandomNumbers(count: number, min: number, max: number): number[] {
+  
   if (count > (max - min + 1)) {
     throw new Error("Count cant be larger than max or miximum, review.,");
   }
@@ -96,14 +70,14 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentSelectedAnswer, setCurrentSelectedAnswer] = useState<number | null>(null);
 
-  // Function to fetch questions from Cosmos DB
+  
   const fetchQuestions = async () => {
     setIsLoading(true);
     try {
-      const data = await ConnectToCosmosDB();
+      const data = await fetchQuestionsFromAPI();
       if (data && data.length > 0) {
         setResults(data);
-        setCurrentQuestionCount(1); // Start with the first question
+        setCurrentQuestionCount(1);
         updateCurrentQuestion(data, 0);
       }
     } catch (error) {
@@ -137,11 +111,11 @@ function App() {
     
     // Update the selected answers array
     const newSelectedAnswers = [...selectedAnswers];
-    // We need to use currentQuestionCount - 1 as the index because question count starts at 1
+    // we need to use currentQuestionCount - 1 as the index because question count starts at 1, off by 1 erro
     newSelectedAnswers[currentQuestionCount - 1] = answerIndex;
     setSelectedAnswers(newSelectedAnswers);
     
-    console.log("Selected answers updated:", newSelectedAnswers);
+    // console.log("Selected answers updated:", newSelectedAnswers);
   };
 
   // Move to the next question
@@ -153,14 +127,15 @@ function App() {
       setSelectedAnswers(newSelectedAnswers);
     } else {
       // If no answer selected, mark as 0 (unanswered)
+      // can also update this to not accept a response if unanswered
       const newSelectedAnswers = [...selectedAnswers];
       newSelectedAnswers[currentQuestionCount - 1] = 0;
       setSelectedAnswers(newSelectedAnswers);
     }
     
     // Log for debugging
-    console.log("Moving from question", currentQuestionCount);
-    console.log("Current selected answers:", selectedAnswers);
+    // console.log("Moving from question", currentQuestionCount);
+    // console.log("Current selected answers:", selectedAnswers);
     
     if (currentQuestionCount < results.length) {
       // Move to next question - note the index is currentQuestionCount because arrays are 0-indexed
@@ -179,20 +154,20 @@ function App() {
     const correctAnswers = results.map(result => Number(result.CorrectOption));
     const userAnswers = selectedAnswers.map(answer => Number(answer));
     
-    console.log("Final selected answers:", userAnswers);
-    console.log("Correct answers:", correctAnswers);
+    // console.log("Final selected answers:", userAnswers);
+    // console.log("Correct answers:", correctAnswers);
     
     let correctCount = 0;
     for (let i = 0; i < correctAnswers.length; i++) {
       // Explicitly compare as numbers
       const isCorrect = correctAnswers[i] === userAnswers[i];
-      console.log(`Question ${i+1}: User selected ${userAnswers[i]} (${typeof userAnswers[i]}), correct is ${correctAnswers[i]} (${typeof correctAnswers[i]}), ${isCorrect ? 'CORRECT' : 'WRONG'}`);
+      // console.log(`Question ${i+1}: User selected ${userAnswers[i]} (${typeof userAnswers[i]}), correct is ${correctAnswers[i]} (${typeof correctAnswers[i]}), ${isCorrect ? 'CORRECT' : 'WRONG'}`);
       if (isCorrect) {
         correctCount++;
       }
     }
     
-    console.log(`Final score: ${correctCount} out of ${results.length}`);
+    // console.log(`Final score: ${correctCount} out of ${results.length}`);
     setScore(correctCount);
     setQuizPhase(2); // Move to score screen
   };
@@ -211,7 +186,7 @@ function App() {
         <>
           <div className="">
             <h1>Security+ Quiz - Data</h1>
-            <p>This quiz will present you 10 questions out of a pool of 25, by connecting through a database.</p>
+            <p>This quiz will present you 10 questions out of a pool of 25, by connecting through an Azure NoSQL CosmosDB database.</p>
             <QuizBtn
               displayedString="Start Quiz"
               onClick={() => setQuizPhase(1)}
